@@ -1,15 +1,28 @@
-Dynamos Hockey Stats — version 1.4
+DYNAMOS HOCKEY STATS — VERSION 1.5 BÊTA
 
-MISE À JOUR
-Remplacez à la racine du dépôt GitHub Pages les trois fichiers : index.html, manifest.webmanifest et sw.js. Ne supprimez pas les données du navigateur ni les données locales de l’application. Le schéma des données demeure compatible avec la version 1.3.1.
+Contenu :
+- index.html : application
+- manifest.webmanifest : configuration PWA
+- sw.js : cache hors ligne (version 1.5 bêta)
+- README.txt : instructions
 
-NOUVEAUTÉS
-- Modification du nom des équipes.
-- Suppression d’une équipe bloquée si elle est associée à un match.
-- Modification du numéro et du nom des joueurs.
-- Suppression d’un joueur bloquée s’il est associé à un événement ou à des statistiques de match (joueur, buteur, passeur, gardien, +/-).
-- Sélection des joueurs présents sur la glace mise en évidence juste avant l’enregistrement de l’événement pour faciliter le calcul du +/-.
-- Cache du service worker renouvelé pour forcer le chargement de la nouvelle version.
+INSTALLATION GITHUB PAGES
+1. Faites d’abord un export JSON depuis l’application actuelle (onglet Sauvegarde).
+2. Décompressez cette archive.
+3. Remplacez les quatre fichiers à la racine du dépôt GitHub par ceux-ci.
+4. Attendez la fin du déploiement GitHub Pages.
+5. Rechargez l’application. Si l’ancienne interface reste affichée, fermez/réouvrez l’onglet ou actualisez la page.
 
-GOOGLE DRIVE
-La synchronisation de la version 1.3.1 est conservée. Gardez la même configuration Google Cloud et le même compte Google sur les appareils.
+NOUVEAUTÉS BÊTA
+- Emplacement des tirs facultatif.
+- Joueur adverse facultatif pour enregistrer un tir ou un but adverse.
+- +/- limité aux buts à égalité numérique, avec exactement cinq joueurs des Dynamos sélectionnés.
+- Les cinq joueurs des Dynamos reçoivent +1 sur un but des Dynamos et -1 sur un but adverse. Aucun +/- en avantage, désavantage ou filet désert.
+- Validation : marqueur et passeurs doivent être des joueurs distincts.
+- Suppression d’un événement avec recalcul des statistiques; correction du temps et de la période.
+- Sommaire du pointage, des tirs cadrés, des statistiques individuelles et des gardiens.
+- Mises au jeu gagnées/perdues facultatives.
+- Synchronisation Google Drive conservée.
+
+IMPORTANT
+Cette version est une bêta à tester. Gardez une copie JSON avant installation. Les données locales utilisent la même clé que la version précédente afin de conserver les matchs existants. Vérifiez les statistiques après mise à jour et signalez toute anomalie.
