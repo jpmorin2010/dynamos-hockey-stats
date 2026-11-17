@@ -1,18 +1,24 @@
-DYNAMOS HOCKEY STATS — VERSION 1.6 BÊTA
+DYNAMOS HOCKEY STATS — VERSION 1.7 BÊTA
 
-Contenu : index.html, manifest.webmanifest, sw.js, README.txt
+Installation / mise à jour GitHub Pages
+- Remplacer les fichiers de la version précédente par ceux de ce dossier.
+- Conserver le même dépôt et le même chemin GitHub Pages.
+- Recharger l’application. Si une ancienne version demeure affichée, fermer puis rouvrir l’application pour actualiser le cache.
 
-Installation GitHub Pages :
-1. Faites d'abord un export JSON de vos données dans l'application.
-2. Décompressez cette archive.
-3. Téléversez les quatre fichiers à la racine du dépôt GitHub et remplacez les fichiers existants.
-4. Cliquez sur Commit changes et attendez le déploiement GitHub Pages.
-5. Rechargez l'application. Ne videz pas les données du navigateur.
+Données
+- Les données locales et la synchronisation Google Drive utilisent les mêmes clés que les versions précédentes.
+- Avant la mise à jour, exporter une sauvegarde JSON depuis l’onglet Sauvegarde.
+- Ne pas effacer les données du navigateur ou le stockage du site.
 
-Nouveautés bêta :
-- Position des joueurs (gardien, défenseur, attaquant) et sélection automatique du gardien identifié.
-- Raccourcis de saisie en deux colonnes : visiteur à gauche, local à droite (affichage empilé sur téléphone).
-- Sommaire des statistiques des joueurs sous la saisie du match.
-- Export Excel-compatible (.xls XML) avec feuilles Événements et Joueurs, en plus des exports JSON et CSV.
+Version 1.7 BÊTA
+- Totaux joueurs et gardiens, avec pourcentages recalculés à partir des totaux.
+- Pourcentage de mises au jeu et de tirs cadrés par joueur.
+- Carte des tirs filtrable par joueur depuis le sommaire du match ou les statistiques.
+- Boutons d’enregistrement à plusieurs endroits.
+- Gravité obligatoire pour chaque tentative de tir, sans valeur présélectionnée.
+- Tri des listes de joueurs par numéro.
+- Modification étendue des événements.
+- Affichage visiteur à gauche et local à droite.
+- Conservation de la synchronisation Google Drive.
 
-À valider : cette version est une bêta. Le format d'export est un classeur XML compatible Excel (.xls), pas un fichier .xlsx natif. Faites une sauvegarde JSON avant installation et testez l'export dans Excel/LibreOffice.
+BÊTA : valider les calculs et les saisies avec des données de test avant une utilisation officielle.
