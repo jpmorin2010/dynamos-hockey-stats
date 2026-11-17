@@ -8,9 +8,11 @@
 :root{--bg:#0b1220;--panel:#151f30;--panel2:#1c2940;--line:#30415d;--txt:#f3f6fb;--muted:#a8b5c8;--blue:#2584ff;--orange:#ff8b32;--green:#35c98a;--red:#ff5d68}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--txt);font:15px system-ui,-apple-system,Segoe UI,sans-serif}header{padding:18px 16px 12px;background:linear-gradient(135deg,#111d31,#172c4b);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}h1{font-size:20px;margin:0;font-weight:850;letter-spacing:.4px}header small{color:var(--muted)}main{max-width:980px;margin:auto;padding:14px 12px 90px}.tabs{display:flex;gap:7px;overflow:auto;padding:10px 0}.tab,button,select,input{font:inherit}.tab{background:var(--panel);color:var(--muted);border:1px solid var(--line);border-radius:10px;padding:10px 13px;white-space:nowrap}.tab.active{background:#1d4e85;color:white;border-color:#368ef0}.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:14px;margin:10px 0}.row{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.between{justify-content:space-between}.muted{color:var(--muted)}.small{font-size:12px}.score{font-size:36px;font-weight:900;letter-spacing:1px}.teamname{font-weight:800}.pill{border-radius:20px;background:var(--panel2);padding:5px 9px;font-size:12px;color:var(--muted)}button{border:0;border-radius:10px;background:var(--blue);color:white;padding:11px 13px;font-weight:750;cursor:pointer}button.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--txt)}button.danger{background:#6b2631}button.green{background:#16835b}button:disabled{opacity:.4}.field{display:flex;flex-direction:column;gap:5px;flex:1;min-width:130px}input,select{background:#0e1828;color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:11px;width:100%}label{font-size:12px;color:var(--muted)}h2{font-size:17px;margin:0 0 12px}h3{font-size:14px;margin:12px 0 8px;color:#d9e6f7}.hidden{display:none!important}.team-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.player-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.player{background:#24344c;border:1px solid #405575;padding:12px 4px;min-height:65px}.player strong{display:block;font-size:21px}.player span{font-size:10px;color:#c4d1e2;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.player.selected{outline:3px solid var(--green);background:#14543f}.rink{width:100%;max-width:700px;display:block;margin:10px auto;border-radius:12px;background:#e9f3fb;touch-action:manipulation}.rink text{font-family:Arial,sans-serif;fill:#27445e;font-size:12px}.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:var(--panel2);padding:12px;border-radius:10px}.stat b{font-size:23px;display:block}.stat span{font-size:11px;color:var(--muted)}.event{padding:9px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}.event:last-child{border:0}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#183b32;border:1px solid var(--green);padding:11px 16px;border-radius:12px;z-index:20;display:none;max-width:90%}.note{background:#142c42;border-left:3px solid var(--blue);padding:10px;border-radius:8px;color:#d5e5f8;font-size:12px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:9px;border-bottom:1px solid var(--line);white-space:nowrap}th{color:var(--muted)}.inlinecheck{display:flex;gap:7px;align-items:center;padding:7px;background:#101a2a;border-radius:8px}.inlinecheck input{width:auto}.total-row{background:#24344c;font-weight:900;border-top:2px solid #6b86a8}.total-row th{color:#fff}.footer{color:var(--muted);font-size:11px;text-align:center;padding:18px}
 @media(min-width:600px){.team-grid{grid-template-columns:1fr 1fr}}@media(min-width:600px){.layout{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}}@media(min-width:700px){.player-grid{grid-template-columns:repeat(6,minmax(0,1fr))}.layout{display:grid;grid-template-columns:1.15fr .85fr;gap:12px}}
+
+.title-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.title-line h1{margin:0}.version-tag{font-size:11px;font-weight:600;letter-spacing:.03em;color:#a9bad2;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 7px;white-space:nowrap}
 </style></head>
 <body>
-<header><div class="row between"><div><h1>🏒 DYNAMOS HOCKEY STATS</h1><small>Statistiques de match · fonctionnement hors ligne</small></div><span class="pill" id="saveState">● Local</span></div></header>
+<header><div class="row between"><div><div class="title-line"><h1>🏒 DYNAMOS HOCKEY STATS</h1><span class="version-tag">v1.9.1 BÊTA</span></div><small>Statistiques de match · fonctionnement hors ligne</small></div><span class="pill" id="saveState">● Local</span></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Match</button><button class="tab" data-tab="teams">Équipes & joueurs</button><button class="tab" data-tab="stats">Statistiques</button><button class="tab" data-tab="backup">Sauvegarde</button>
@@ -86,7 +88,7 @@
 <p class="small muted">Les données sont enregistrées immédiatement sur ce téléphone. La synchronisation Drive se fait lorsque l'application est ouverte et connectée à Internet. L'application tente de rétablir automatiquement l'autorisation Google à l'ouverture. Si Google exige une nouvelle autorisation, appuyez sur Connecter Google Drive.</p>
 </div>
 <div class="panel"><h2>Sauvegarde et exportation</h2><p class="muted">Les données sont conservées sur cet appareil. Exportez régulièrement une copie pour éviter toute perte.</p><div class="row"><button id="exportJson">Exporter toutes les données (JSON)</button><button id="exportCsv" class="secondary">Exporter les événements (CSV)</button><button id="exportExcel" class="secondary">Exporter le match pour Excel</button></div><h3>Restaurer une sauvegarde</h3><input type="file" id="importFile" accept=".json,application/json"><p class="small muted">La restauration remplace les données locales actuelles.</p></div><div class="panel"><h2>À propos</h2><p class="muted small">Prototype local de Dynamos Hockey Stats. Aucune donnée n'est envoyée à un serveur. Pour une utilisation durable, faites des exports JSON réguliers.</p></div></section>
-<div class="footer">Dynamos Hockey Stats · Version 1.9 BÊTA · Données locales + Google Drive</div>
+<div class="footer">Dynamos Hockey Stats · Version 1.9.1 BÊTA · Données locales + Google Drive</div>
 </main><div class="toast" id="toast"></div>
 <script>
 const KEY='dynamos-hockey-stats-v1';
@@ -96,6 +98,7 @@ const DRIVE_FILE_NAME='Dynamos Hockey Stats - backup.json';
 let driveAccessToken=null,driveTokenClient=null,driveSyncTimer=null,driveAuthPending=false;
 const DRIVE_META_KEY='dynamos-hockey-drive-sync-v1';
 const DRIVE_CONNECTED_KEY='dynamos-hockey-drive-connected-v1';
+const APP_VERSION='1.9.1 BÊTA';
 function getDriveMeta(){try{return JSON.parse(localStorage.getItem(DRIVE_META_KEY))||{}}catch(e){return {}}}
 function setDriveMeta(m){localStorage.setItem(DRIVE_META_KEY,JSON.stringify(m))}
 function dataHash(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
@@ -148,24 +151,63 @@ function download(name,content,type){let a=document.createElement('a'),url=URL.c
 function loadGoogleIdentity(){return new Promise((resolve,reject)=>{if(window.google?.accounts?.oauth2){resolve();return}let settled=false,timer=null;const finish=(err)=>{if(settled)return;settled=true;if(timer)clearTimeout(timer);err?reject(err):resolve()};let sc=document.querySelector('script[data-google-gis]');if(sc){if(window.google?.accounts?.oauth2){finish();return}if(sc.dataset.loaded==='1'||sc.readyState==='complete'){finish(new Error('La bibliothèque Google a déjà été chargée, mais son service OAuth est indisponible. Rechargez la page.'));return}sc.addEventListener('load',()=>{sc.dataset.loaded='1';window.google?.accounts?.oauth2?finish():finish(new Error('Le service OAuth Google n’est pas disponible.'))},{once:true});sc.addEventListener('error',()=>finish(new Error('Impossible de charger la bibliothèque Google. Vérifiez Internet et bloqueurs de contenu.')),{once:true});}else{sc=document.createElement('script');sc.src='https://accounts.google.com/gsi/client';sc.async=true;sc.defer=true;sc.dataset.googleGis='1';sc.onload=()=>{sc.dataset.loaded='1';window.google?.accounts?.oauth2?finish():finish(new Error('Le service OAuth Google n’est pas disponible.'))};sc.onerror=()=>finish(new Error('Impossible de charger la bibliothèque Google. Vérifiez Internet et bloqueurs de contenu.'));document.head.appendChild(sc)}timer=setTimeout(()=>finish(new Error('Délai dépassé pendant le chargement de Google. Vérifiez votre connexion et réessayez.')),12000)})}
 // Précharger Google Identity Services pendant l'ouverture de l'application afin que le clic utilisateur puisse ouvrir directement OAuth.
 loadGoogleIdentity().catch(e=>{console.warn('Google Identity Services non disponible au préchargement :',e.message)});
-function requestDriveToken(promptValue,firstConnection){return new Promise((resolve,reject)=>{if(driveAuthPending){reject(new Error('Une demande de connexion Google est déjà en cours.'));return}driveAuthPending=true;try{driveTokenClient=google.accounts.oauth2.initTokenClient({client_id:GOOGLE_CLIENT_ID,scope:DRIVE_SCOPE,callback:async(response)=>{driveAuthPending=false;if(response.error||!response.access_token){reject(new Error(response.error||'Google n’a pas fourni de jeton d’accès.'));return}driveAccessToken=response.access_token;localStorage.setItem(DRIVE_CONNECTED_KEY,'1');updateDriveButtons();driveStatus('Google Drive connecté. Vérification des données…');try{await syncDrive(firstConnection);resolve()}catch(e){reject(e)}},error_callback:(error)=>{driveAuthPending=false;reject(new Error(error?.type==='popup_closed'?'La fenêtre Google a été fermée avant la fin de la connexion.':error?.type==='popup_failed_to_open'?'La fenêtre Google a été bloquée par le navigateur. Autorisez les fenêtres contextuelles puis réessayez.':'La fenêtre de connexion Google n’a pas pu être ouverte.'))}});driveTokenClient.requestAccessToken(promptValue?{prompt:promptValue}:{});}catch(e){driveAuthPending=false;reject(e)}})}
-function connectGoogleDrive(){
- // Important sur Android/Chrome : requestAccessToken doit être appelé directement
- // dans le geste utilisateur, sans await ni autre opération asynchrone préalable.
- if(window.google?.accounts?.oauth2){
-   driveStatus('Ouverture de la fenêtre Google…');
-   requestDriveToken('consent',true).catch(e=>{driveStatus('Connexion Google impossible : '+e.message);toast('Connexion Google impossible.')});
-   return;
+function requestDriveToken(firstConnection=true){
+ if(driveAuthPending){driveStatus('Une demande Google est déjà en cours. Terminez-la ou rechargez la page.');return;}
+ if(!window.google?.accounts?.oauth2){driveStatus('La bibliothèque Google n’est pas prête. Rechargez la page puis réessayez.');return;}
+ driveAuthPending=true;driveStatus('Demande d’autorisation envoyée à Google…');
+ try{
+   driveTokenClient=window.google.accounts.oauth2.initTokenClient({
+     client_id:GOOGLE_CLIENT_ID,
+     scope:DRIVE_SCOPE,
+     include_granted_scopes:true,
+     callback:async(response)=>{
+       driveAuthPending=false;
+       if(response?.error||!response?.access_token){
+         const detail=response?.error_description||response?.error||'Aucun jeton reçu';
+         driveStatus('Google a refusé ou interrompu l’autorisation ('+detail+'). Vérifiez que votre compte figure dans les utilisateurs tests du projet Google Cloud.');
+         console.error('Google OAuth token response:',response);
+         return;
+       }
+       driveAccessToken=response.access_token;
+       localStorage.setItem(DRIVE_CONNECTED_KEY,'1');
+       updateDriveButtons();
+       driveStatus('Autorisation reçue. Vérification de l’accès à Google Drive…');
+       try{
+         await syncDrive(firstConnection);
+         driveStatus('Google Drive connecté et vérifié.');
+       }catch(e){
+         driveStatus('Autorisation Google reçue, mais accès/synchronisation Drive impossible : '+(e?.message||e));
+         console.error('Google Drive sync after OAuth:',e);
+       }
+     },
+     error_callback:(error)=>{
+       driveAuthPending=false;
+       const type=error?.type||'unknown';
+       const msg=type==='popup_closed'?'La fenêtre Google a été fermée avant le retour de l’autorisation.':type==='popup_failed_to_open'?'Chrome a bloqué la fenêtre Google. Autorisez les fenêtres contextuelles pour ce site.':'Erreur de fenêtre Google ('+type+').';
+       driveStatus(msg+' Aucun changement n’a été fait à vos données locales.');
+       console.error('Google OAuth popup error:',error);
+     }
+   });
+   // Appel direct dans le clic utilisateur. Ne pas forcer "consent" à chaque tentative.
+   driveTokenClient.requestAccessToken({prompt:''});
+ }catch(e){
+   driveAuthPending=false;
+   driveStatus('Impossible de démarrer l’autorisation Google : '+(e?.message||e));
+   console.error('Google OAuth initialization error:',e);
  }
- driveStatus('Préparation de la connexion Google…');
- loadGoogleIdentity().then(()=>{
-   driveStatus('Google est prêt. Appuyez de nouveau sur « Connecter Google Drive » pour autoriser la connexion.');
- }).catch(e=>{
-   driveStatus('Connexion Google impossible : '+e.message);
-   toast('Connexion Google impossible.');
- });
 }
-async function restoreGoogleDriveConnection(){if(localStorage.getItem(DRIVE_CONNECTED_KEY)!=='1')return;try{driveStatus('Restauration de la connexion Google…');await loadGoogleIdentity();await requestDriveToken('',false)}catch(e){driveAccessToken=null;updateDriveButtons();driveStatus('Reconnexion nécessaire : '+e.message+' Appuyez sur « Connecter Google Drive ».')}}
+function connectGoogleDrive(){
+ if(window.google?.accounts?.oauth2){requestDriveToken(true);return;}
+ driveStatus('Google n’est pas encore prêt. Patientez quelques secondes, puis appuyez de nouveau sur Connecter Google Drive.');
+ loadGoogleIdentity().then(()=>driveStatus('Google est prêt. Appuyez de nouveau sur Connecter Google Drive.')).catch(e=>driveStatus('Chargement Google impossible : '+e.message));
+}
+// Google Identity Services utilise des jetons d’accès temporaires. En mode navigateur,
+// leur renouvellement doit être déclenché par un geste utilisateur; ne pas ouvrir OAuth au chargement.
+async function restoreGoogleDriveConnection(){
+ if(localStorage.getItem(DRIVE_CONNECTED_KEY)==='1'){
+   driveStatus('Compte Google déjà autorisé sur cet appareil. Pour rétablir une session Drive, appuyez sur Connecter Google Drive.');
+ }
+}
 async function driveRequest(url,options={}){if(!driveAccessToken)throw new Error('Reconnectez Google Drive.');let headers=Object.assign({},options.headers||{},{Authorization:'Bearer '+driveAccessToken});let response;try{response=await fetch(url,Object.assign({},options,{headers}))}catch(err){let endpoint=url.includes('/upload/')?'téléversement du fichier':'accès à l’API Drive';throw new Error('Échec réseau/CORS pendant '+endpoint+'. Vérifiez que Google Drive API est activée et réessayez en rechargeant la page. Détail : '+(err?.message||'Failed to fetch'))}if(response.status===401){driveAccessToken=null;updateDriveButtons();driveStatus('Session Google expirée. Appuyez sur Connecter Google Drive.');throw new Error('Session Google expirée.')}if(!response.ok){let detail=await response.text();throw new Error('Google Drive ('+response.status+') : '+detail.slice(0,300))}return response}
 async function findDriveBackup(){let q=encodeURIComponent("name='"+DRIVE_FILE_NAME.replace(/'/g,"\\'")+"' and trashed=false");let r=await driveRequest('https://www.googleapis.com/drive/v3/files?q='+q+'&pageSize=20&orderBy=modifiedTime%20desc&fields=files(id,name,modifiedTime,mimeType)');let j=await r.json();return j.files?.[0]||null}
 async function readDriveBackup(fileId){let r=await driveRequest('https://www.googleapis.com/drive/v3/files/'+encodeURIComponent(fileId)+'?alt=media');let data=await r.json();if(!data.teams||!data.games)throw new Error('Le fichier Drive ne contient pas une sauvegarde Dynamos valide.');return data}
