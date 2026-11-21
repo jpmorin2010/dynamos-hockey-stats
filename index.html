@@ -12,7 +12,7 @@
 .title-line{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.title-line h1{margin:0}.version-tag{font-size:11px;font-weight:600;letter-spacing:.03em;color:#a9bad2;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:999px;padding:4px 7px;white-space:nowrap}
 </style></head>
 <body>
-<header><div class="row between"><div><div class="title-line"><h1>🏒 DYNAMOS HOCKEY STATS</h1><span class="version-tag">v1.9.1 BÊTA</span></div><small>Statistiques de match · fonctionnement hors ligne</small></div><span class="pill" id="saveState">● Local</span></div></header>
+<header><div class="row between"><div><div class="title-line"><h1>🏒 DYNAMOS HOCKEY STATS</h1><span class="version-tag">v1.9.2 BÊTA</span></div><small>Statistiques de match · fonctionnement hors ligne</small></div><span class="pill" id="saveState">● Local</span></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Match</button><button class="tab" data-tab="teams">Équipes & joueurs</button><button class="tab" data-tab="stats">Statistiques</button><button class="tab" data-tab="backup">Sauvegarde</button>
@@ -88,7 +88,7 @@
 <p class="small muted">Les données sont enregistrées immédiatement sur ce téléphone. La synchronisation Drive se fait lorsque l'application est ouverte et connectée à Internet. L'application tente de rétablir automatiquement l'autorisation Google à l'ouverture. Si Google exige une nouvelle autorisation, appuyez sur Connecter Google Drive.</p>
 </div>
 <div class="panel"><h2>Sauvegarde et exportation</h2><p class="muted">Les données sont conservées sur cet appareil. Exportez régulièrement une copie pour éviter toute perte.</p><div class="row"><button id="exportJson">Exporter toutes les données (JSON)</button><button id="exportCsv" class="secondary">Exporter les événements (CSV)</button><button id="exportExcel" class="secondary">Exporter le match pour Excel</button></div><h3>Restaurer une sauvegarde</h3><input type="file" id="importFile" accept=".json,application/json"><p class="small muted">La restauration remplace les données locales actuelles.</p></div><div class="panel"><h2>À propos</h2><p class="muted small">Prototype local de Dynamos Hockey Stats. Aucune donnée n'est envoyée à un serveur. Pour une utilisation durable, faites des exports JSON réguliers.</p></div></section>
-<div class="footer">Dynamos Hockey Stats · Version 1.9.1 BÊTA · Données locales + Google Drive</div>
+<div class="footer">Dynamos Hockey Stats · Version 1.9.2 BÊTA · Données locales + Google Drive</div>
 </main><div class="toast" id="toast"></div>
 <script>
 const KEY='dynamos-hockey-stats-v1';
@@ -98,7 +98,7 @@ const DRIVE_FILE_NAME='Dynamos Hockey Stats - backup.json';
 let driveAccessToken=null,driveTokenClient=null,driveSyncTimer=null,driveAuthPending=false;
 const DRIVE_META_KEY='dynamos-hockey-drive-sync-v1';
 const DRIVE_CONNECTED_KEY='dynamos-hockey-drive-connected-v1';
-const APP_VERSION='1.9.1 BÊTA';
+const APP_VERSION='1.9.2 BÊTA';
 function getDriveMeta(){try{return JSON.parse(localStorage.getItem(DRIVE_META_KEY))||{}}catch(e){return {}}}
 function setDriveMeta(m){localStorage.setItem(DRIVE_META_KEY,JSON.stringify(m))}
 function dataHash(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
@@ -173,8 +173,9 @@ function requestDriveToken(firstConnection=true){
        updateDriveButtons();
        driveStatus('Autorisation reçue. Vérification de l’accès à Google Drive…');
        try{
-         await syncDrive(firstConnection);
-         driveStatus('Google Drive connecté et vérifié.');
+         const syncResult=await syncDrive(firstConnection);
+         if(syncResult?.ok){driveStatus('Google Drive connecté et vérifié.');}
+         else{driveStatus('Autorisation Google reçue, mais synchronisation non confirmée : '+(syncResult?.error||'résultat inconnu'));}
        }catch(e){
          driveStatus('Autorisation Google reçue, mais accès/synchronisation Drive impossible : '+(e?.message||e));
          console.error('Google Drive sync after OAuth:',e);
@@ -224,13 +225,13 @@ async function writeDriveBackup(fileId=null){
 }
 function localDataIsEmpty(){return db.games.every(g=>!g.events?.length)&&db.teams.every(t=>!t.players?.length)}
 async function applyRemoteBackup(file,remoteData){db=remoteData;localStorage.setItem(KEY,JSON.stringify(db));let snap=JSON.stringify(db);setDriveMeta({fileId:file.id,lastRemoteModifiedTime:file.modifiedTime,lastSyncedHash:dataHash(snap)});render();driveStatus('Synchronisé depuis Google Drive · '+new Date(file.modifiedTime).toLocaleString())}
-async function syncDrive(firstConnection=false){if(!driveAccessToken)return;let btn=document.getElementById('syncDrive');if(btn)btn.disabled=true;try{driveStatus('Synchronisation en cours…');let remote=await findDriveBackup(),meta=getDriveMeta(),localJson=JSON.stringify(db),localHash=dataHash(localJson);if(!remote){let created=await writeDriveBackup();setDriveMeta({fileId:created.id,lastRemoteModifiedTime:created.modifiedTime,lastSyncedHash:localHash});driveStatus('Première sauvegarde envoyée dans Google Drive.');toast('Sauvegarde Drive créée.');return}
-if(firstConnection&&!meta.lastSyncedHash){if(localDataIsEmpty()){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);toast('Données récupérées de Google Drive.');return}else{let useRemote=confirm('Une sauvegarde Dynamos existe déjà dans Google Drive.\\n\\nOK : télécharger la sauvegarde Drive et remplacer les données de cet appareil.\\nAnnuler : envoyer les données de cet appareil et remplacer la sauvegarde Drive.');if(useRemote){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);return}else{let updated=await writeDriveBackup(remote.id);setDriveMeta({fileId:remote.id,lastRemoteModifiedTime:updated.modifiedTime,lastSyncedHash:localHash});driveStatus('Données locales envoyées dans Google Drive.');return}}}
-let remoteChanged=!!meta.lastRemoteModifiedTime&&remote.modifiedTime!==meta.lastRemoteModifiedTime,localChanged=!!meta.lastSyncedHash&&localHash!==meta.lastSyncedHash;if(remoteChanged&&localChanged){let useRemote=confirm('Conflit : Google Drive et cet appareil ont tous deux été modifiés depuis la dernière synchronisation.\\n\\nOK : conserver la version Google Drive.\\nAnnuler : conserver cette version locale et remplacer Drive.');if(useRemote){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);return}}
-else if(remoteChanged&&!localChanged){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);return}
-if(localChanged||!meta.lastSyncedHash){let updated=await writeDriveBackup(remote.id);setDriveMeta({fileId:remote.id,lastRemoteModifiedTime:updated.modifiedTime,lastSyncedHash:localHash});driveStatus('Synchronisé vers Google Drive · '+new Date(updated.modifiedTime).toLocaleString())}
-else{setDriveMeta({fileId:remote.id,lastRemoteModifiedTime:remote.modifiedTime,lastSyncedHash:localHash});driveStatus('À jour dans Google Drive · '+new Date(remote.modifiedTime).toLocaleString())}
-}catch(e){driveStatus('Synchronisation impossible : '+e.message);toast('Erreur de synchronisation Drive.')}finally{updateDriveButtons()}}
+async function syncDrive(firstConnection=false){if(!driveAccessToken)return {ok:false,error:'Aucun jeton Google Drive.'};let btn=document.getElementById('syncDrive');if(btn)btn.disabled=true;try{driveStatus('Synchronisation en cours…');let remote=await findDriveBackup(),meta=getDriveMeta(),localJson=JSON.stringify(db),localHash=dataHash(localJson);if(!remote){let created=await writeDriveBackup();setDriveMeta({fileId:created.id,lastRemoteModifiedTime:created.modifiedTime,lastSyncedHash:localHash});driveStatus('Première sauvegarde envoyée dans Google Drive.');toast('Sauvegarde Drive créée.');return {ok:true,mode:'created'};}
+if(firstConnection&&!meta.lastSyncedHash){if(localDataIsEmpty()){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);toast('Données récupérées de Google Drive.');return {ok:true,mode:'downloaded'};}else{let useRemote=confirm('Une sauvegarde Dynamos existe déjà dans Google Drive.\n\nOK : télécharger la sauvegarde Drive et remplacer les données de cet appareil.\nAnnuler : envoyer les données de cet appareil et remplacer la sauvegarde Drive.');if(useRemote){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);return {ok:true,mode:'downloaded'};}else{let updated=await writeDriveBackup(remote.id);setDriveMeta({fileId:remote.id,lastRemoteModifiedTime:updated.modifiedTime,lastSyncedHash:localHash});driveStatus('Données locales envoyées dans Google Drive.');return {ok:true,mode:'uploaded'};}}}
+let remoteChanged=!!meta.lastRemoteModifiedTime&&remote.modifiedTime!==meta.lastRemoteModifiedTime,localChanged=!!meta.lastSyncedHash&&localHash!==meta.lastSyncedHash;if(remoteChanged&&localChanged){let useRemote=confirm('Conflit : Google Drive et cet appareil ont tous deux été modifiés depuis la dernière synchronisation.\n\nOK : conserver la version Google Drive.\nAnnuler : conserver cette version locale et remplacer Drive.');if(useRemote){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);return {ok:true,mode:'downloaded'};}}
+else if(remoteChanged&&!localChanged){let remoteData=await readDriveBackup(remote.id);await applyRemoteBackup(remote,remoteData);return {ok:true,mode:'downloaded'};}
+if(localChanged||!meta.lastSyncedHash){let updated=await writeDriveBackup(remote.id);setDriveMeta({fileId:remote.id,lastRemoteModifiedTime:updated.modifiedTime,lastSyncedHash:localHash});driveStatus('Synchronisé vers Google Drive · '+new Date(updated.modifiedTime).toLocaleString());return {ok:true,mode:'uploaded'};}
+else{setDriveMeta({fileId:remote.id,lastRemoteModifiedTime:remote.modifiedTime,lastSyncedHash:localHash});driveStatus('À jour dans Google Drive · '+new Date(remote.modifiedTime).toLocaleString());return {ok:true,mode:'unchanged'};}
+}catch(e){driveStatus('Synchronisation impossible : '+e.message);toast('Erreur de synchronisation Drive.');return {ok:false,error:e?.message||String(e)};}finally{updateDriveButtons();}}
 document.getElementById('connectDrive').onclick=connectGoogleDrive;
 document.getElementById('syncDrive').onclick=()=>syncDrive(false);
 window.addEventListener('focus',()=>{if(driveAccessToken)scheduleDriveSync()});
