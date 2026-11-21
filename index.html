@@ -13,9 +13,18 @@
 header{padding:9px 12px}header small{display:none}.title-line h1{font-size:17px}.version-tag{padding:3px 6px}.selection-btn.active,button.active{background:#c83d4b!important;color:#fff!important;border-color:#ff6b75!important;box-shadow:0 0 0 2px rgba(255,93,104,.35)}.player.selected{outline:3px solid #ff5d68;background:#8c2633}.danger-buttons button.active{outline:0;background:#c83d4b!important;color:#fff!important}.team-select-button.active{border-color:#ff5d68;box-shadow:0 0 0 2px #ff5d68}@media(max-width:600px){main{padding:8px 8px 70px}.panel{padding:10px;margin:7px 0}.tabs{padding:5px 0}.tab{padding:8px 10px}}
 
 .event-type-time{align-items:flex-end;gap:8px}.period-time-field{flex:0 0 78px;max-width:78px;margin-left:auto}.period-time-field input{padding:7px 4px;text-align:center}.period-time-field label{font-size:12px;margin-bottom:3px}.event-type-field{flex:1;min-width:0}.event-time-field{flex:0 0 82px;max-width:82px}.event-time-field input{padding:8px 5px;text-align:center}.event-type-buttons{gap:5px;flex-wrap:wrap}.onice-columns{display:grid;grid-template-columns:1fr 1fr;gap:10px}.onice-column{min-width:0}.onice-column>strong{display:block;margin-bottom:6px}.onice-column [data-onice]{margin-bottom:5px}@media(max-width:480px){.onice-columns{gap:6px}.inlinecheck{padding:6px 4px;font-size:12px}.event-type-time{gap:5px}.event-time-field{flex-basis:76px;max-width:76px}}
+
+/* v1.9.63: période et temps sur une seule ligne */
+.period-controls{display:flex;flex-wrap:nowrap;gap:5px;align-items:center;width:100%;}
+.period-controls>button{flex:0 0 auto;padding:9px 10px;min-width:0;}
+.period-controls #ot{padding-left:10px;padding-right:10px;}
+.period-controls .period-time-field{flex:0 1 76px;min-width:58px;max-width:76px;margin-left:0;display:flex;flex-direction:row;align-items:center;gap:0;}
+.period-controls .period-time-field label{display:none;}
+.period-controls .period-time-field input{padding:8px 2px;text-align:center;min-width:0;}
+@media(max-width:400px){.period-controls{gap:4px}.period-controls>button{padding:8px 7px;font-size:14px}.period-controls #ot{padding-left:7px;padding-right:7px}.period-controls .period-time-field{flex-basis:68px;max-width:68px;}}
 </style></head>
 <body>
-<header><div class="row between"><div class="title-line"><h1>🏒 DYNAMOS HOCKEY STATS</h1><span class="version-tag">v1.9.62</span></div><span class="pill hidden" id="saveState">● Sauvegardé</span></div></header>
+<header><div class="row between"><div class="title-line"><h1>🏒 DYNAMOS HOCKEY STATS</h1><span class="version-tag">v1.9.63</span></div><span class="pill hidden" id="saveState">● Sauvegardé</span></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Match</button><button class="tab" data-tab="teams">Équipes & joueurs</button><button class="tab" data-tab="stats">Statistiques</button><button class="tab" data-tab="backup">Sauvegarde</button>
@@ -36,7 +45,7 @@ header{padding:9px 12px}header small{display:none}.title-line h1{font-size:17px}
 <div style="text-align:center"><div class="pill">SCORE</div><div class="muted small" id="gameClock">--:--</div></div>
 <div style="text-align:right"><div class="teamname" id="awayName">Adversaire</div><div class="score" id="awayScore">0</div></div>
 </div>
-<div class="row">
+<div class="row period-controls">
 <button class="secondary" id="p1">P1</button><button class="secondary" id="p2">P2</button><button class="secondary" id="p3">P3</button><button class="secondary" id="ot">PROL</button><div class="field period-time-field"><label>Temps</label><input id="eventTime" placeholder="08:42" inputmode="numeric"></div>
 
 </div>
@@ -135,7 +144,7 @@ function currentTeams(){return [document.getElementById('homeTeam').value,docume
 function initGame(){if(!game()){let ids=currentTeams();db.games.push({id:id(),date:new Date().toISOString().slice(0,10),home:ids[0],away:ids[1],opponent:'',events:[],finished:false});db.currentGame=db.games.at(-1).id;save()}render()}
 function renderSelect(el,items,selected){el.innerHTML=items.map(x=>`<option value="${x.id}" ${x.id===selected?'selected':''}>${esc(x.name)}</option>`).join('')}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-// v1.9.62: restored missing event label and penalty parsing helpers
+// v1.9.63: restored missing event label and penalty parsing helpers
 function label(type){return ({shot:'Tir cadré',goal:'But',miss:'Tir manqué',blocked:'Tir bloqué',penalty:'Pénalité',faceoff:'Mise au jeu gagnée',faceoffLost:'Mise au jeu perdue',hit:'Revirement'})[type]||String(type??'');}
 function penaltyMinutes(value){let n=parseFloat(String(value??'').replace(',', '.'));return Number.isFinite(n)?n:0;}
 function render(){let teams=db.teams;['homeTeam','awayTeam','eventTeam','rosterTeam','statsTeam'].forEach((idn)=>{let el=document.getElementById(idn),old=el.value;renderSelect(el,teams,old||teams[0]?.id)});let g=game();if(!g){initGame();return}document.getElementById('homeTeam').value=g.home;document.getElementById('awayTeam').value=g.away;document.getElementById('gameDate').value=g.date;document.getElementById('opponentName').value=g.opponent||'';document.getElementById('homeName').textContent=team(g.home)?.name||'Local';document.getElementById('awayName').textContent=team(g.away)?.name||'Visiteur';document.getElementById('periodLabel').textContent=typeof period==='number'?'Période '+period:period;[['p1',1],['p2',2],['p3',3],['ot','Prolongation']].forEach(([bid,bv])=>document.getElementById(bid).classList.toggle('active',bv===period));document.getElementById('homeScore').textContent=g.events.filter(e=>e.type==='goal'&&e.team===g.home).length;document.getElementById('awayScore').textContent=g.events.filter(e=>e.type==='goal'&&e.team===g.away).length;document.getElementById('gameClock').textContent='Temps manuel';renderQuickEvents();renderEventPlayers();renderOnIce();renderFormations();renderEvents();renderLiveStats();renderTeams();renderRoster();renderStats()}
