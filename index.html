@@ -273,7 +273,39 @@ document.getElementById('syncDrive').onclick=()=>syncDrive(false);
 window.addEventListener('focus',()=>{if(driveAccessToken)scheduleDriveSync()});
 window.addEventListener('online',()=>{if(driveAccessToken)scheduleDriveSync();else if(localStorage.getItem(DRIVE_CONNECTED_KEY)==='1')restoreGoogleDriveConnection()});
 window.addEventListener('load',()=>{if(localStorage.getItem(DRIVE_CONNECTED_KEY)==='1')restoreGoogleDriveConnection()},{once:true});
-function xmlCell(v){return `<Cell><Data ss:Type="String">${esc(v)}</Data></Cell>`}function excelExport(){let g=game();if(!g){toast('Aucun match.');return}let sheets=[];let eventRows=[['Date','Visiteur','Local','Période','Temps','Équipe','Événement','Numéro','Joueur','Force','xG','Gardien'],...g.events.map(e=>[g.date,team(g.away)?.name||'',team(g.home)?.name||'',e.period||'',e.time||'',team(e.team)?.name||'',label(e.type),e.number??'',e.playerName||'',e.strength||'',e.xg??'',e.goalieId?(team(e.team===g.home?g.away:g.home)?.players.find(p=>p.id===e.goalieId)?.num??''):''])];sheets.push(['Événements',eventRows]);let playerRows=[['Équipe','Joueur','B','A','PTS','+/-','Tirs cadrés','Tirs tentés','Tirs bloqués','Tirs manqués','Mise au jeu gagnées','Mise au jeu perdues']];[g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).forEach(p=>{let b=g.events.filter(e=>e.type==='goal'&&e.team===tid&&e.scorer===p.id).length,a=g.events.filter(e=>e.type==='goal'&&e.team===tid&&(e.assist1===p.id||e.assist2===p.id)).length,plus=g.events.filter(e=>e.type==='goal'&&e.strength==='even'&&e.plus?.includes(p.id)).length,minus=g.events.filter(e=>e.type==='goal'&&e.strength==='even'&&e.minus?.includes(p.id)).length,shots=g.events.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal'].includes(e.type)).length,attempts=g.events.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal','miss','blocked'].includes(e.type)).length,blocked=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='blocked').length,miss=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='miss').length,fw=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoff').length,fl=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoffLost').length;playerRows.push([t.name,`#${p.num} ${p.name||''}`,b,a,b+a,plus-minus,shots,attempts,blocked,miss,fw,fl])})});sheets.push(['Joueurs',playerRows]);let xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+sheets.map(([name,rows])=>`<Worksheet ss:Name="${name}"><Table>${rows.map(row=>'<Row>'+row.map(xmlCell).join('')+'</Row>').join('')}</Table></Worksheet>`).join('')+'</Workbook>';download('dynamos-match-'+g.date+'.xls',xml,'application/vnd.ms-excel;charset=utf-8');}document.getElementById('exportExcel').onclick=excelExport;
+function xmlCell(v){return `<Cell><Data ss:Type="String">${esc(v)}</Data></Cell>`}
+function excelExport(){
+ let g=game();if(!g){toast('Aucun match.');return}
+ let sheets=[];
+ let eventRows=[['Date','Visiteur','Local','Période','Temps','Équipe','Événement','Numéro','Joueur','Force','xG','Gardien'],...g.events.map(e=>[g.date,team(g.away)?.name||'',team(g.home)?.name||'',e.period||'',e.time||'',team(e.team)?.name||'',label(e.type),e.number??'',e.playerName||'',e.strength||'',e.xg??'',e.goalieId?(team(e.team===g.home?g.away:g.home)?.players.find(p=>p.id===e.goalieId)?.num??''):''])];
+ sheets.push(['Événements',eventRows]);
+ let playerRows=[['Équipe','Joueur','B','A','PTS','+/-','Tirs cadrés','Tirs tentés','Tirs bloqués','Tirs manqués','Mises au jeu gagnées','Mises au jeu perdues','Total mises au jeu','Revirements']];
+ [g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).forEach(p=>{
+  let b=g.events.filter(e=>e.type==='goal'&&e.team===tid&&e.scorer===p.id).length,
+  a=g.events.filter(e=>e.type==='goal'&&e.team===tid&&(e.assist1===p.id||e.assist2===p.id)).length,
+  plus=g.events.filter(e=>e.type==='goal'&&e.strength==='even'&&e.plus?.includes(p.id)).length,
+  minus=g.events.filter(e=>e.type==='goal'&&e.strength==='even'&&e.minus?.includes(p.id)).length,
+  shots=g.events.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal'].includes(e.type)).length,
+  attempts=g.events.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal','miss','blocked'].includes(e.type)).length,
+  blocked=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='blocked').length,
+  miss=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='miss').length,
+  fw=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoff').length,
+  fl=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoffLost').length,
+  turnovers=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='hit').length;
+  playerRows.push([t.name,`#${p.num} ${p.name||''}`,b,a,b+a,plus-minus,shots,attempts,blocked,miss,fw,fl,fw+fl,turnovers]);
+ })});
+ sheets.push(['Joueurs',playerRows]);
+ let goalieRows=[['Équipe','Gardien','Tirs contre','Arrêts','Buts alloués','SV%','xGA']];
+ [g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).forEach(p=>{
+  let faced=g.events.filter(e=>e.goalieId===p.id&&['shot','goal'].includes(e.type));if(!faced.length)return;
+  let sa=faced.length,ga=faced.filter(e=>e.type==='goal').length,sv=sa-ga,xga=faced.reduce((sum,e)=>sum+(Number(e.xg)||0),0);
+  goalieRows.push([t.name,`#${p.num} ${p.name||''}`,sa,sv,ga,sa?((sv/sa)*100).toFixed(1)+'%':'',xga.toFixed(2)]);
+ })});
+ sheets.push(['Gardiens',goalieRows]);
+ let xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+sheets.map(([name,rows])=>`<Worksheet ss:Name="${name}"><Table>${rows.map(row=>'<Row>'+row.map(xmlCell).join('')+'</Row>').join('')}</Table></Worksheet>`).join('')+'</Workbook>';
+ download('dynamos-match-'+g.date+'.xls',xml,'application/vnd.ms-excel;charset=utf-8');
+}
+ document.getElementById('exportExcel').onclick=excelExport;
 document.getElementById('exportJson').onclick=()=>download('dynamos-hockey-stats-backup.json',JSON.stringify(db,null,2),'application/json');
 document.getElementById('exportCsv').onclick=()=>{let all=db.games.flatMap(g=>g.events.map(e=>({...e,gameDate:g.date,home:team(g.home)?.name,away:team(g.away)?.name}))),keys=['gameDate','home','away','period','time','type','team','number','playerName','x','y','danger','xg','strength'];let csv=[keys.join(';'),...all.map(e=>keys.map(k=>'"'+String(e[k]??'').replace(/"/g,'""')+'"').join(';'))].join('\n');download('dynamos-evenements.csv','\ufeff'+csv,'text/csv;charset=utf-8')};
 document.getElementById('importFile').onchange=async e=>{let f=e.target.files[0];if(!f)return;try{let d=JSON.parse(await f.text());if(!d.teams||!d.games)throw Error();if(confirm('Remplacer les données locales par cette sauvegarde?')){db=d;db.currentGame=db.currentGame||db.games[0]?.id;save();render();toast('Sauvegarde restaurée.')}}catch(err){toast('Fichier de sauvegarde invalide.')}};
