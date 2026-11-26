@@ -25,7 +25,7 @@ header{padding:9px 12px}header small{display:none}.title-line h1{font-size:17px}
 .record-event-row,.center-actions{justify-content:center}.record-event-row button{min-width:210px}.center-actions button{min-width:145px}
 </style></head>
 <body>
-<header><div class="row between"><div class="title-line"><h1>🏒 DYNAMOS HOCKEY STATS</h1><span class="version-tag">v1.9.68</span></div><span class="pill hidden" id="saveState">● Sauvegardé</span></div></header>
+<header><div class="row between"><div class="title-line"><h1>🏒 DYNAMOS HOCKEY STATS</h1><span class="version-tag">v1.9.69</span></div><span class="pill hidden" id="saveState">● Sauvegardé</span></div></header>
 <main>
 <div class="tabs">
 <button class="tab active" data-tab="live">Match</button><button class="tab" data-tab="teams">Équipes & joueurs</button><button class="tab" data-tab="stats">Statistiques</button><button class="tab" data-tab="backup">Sauvegarde</button>
@@ -124,7 +124,7 @@ const DRIVE_FILE_NAME='Dynamos Hockey Stats - backup.json';
 let driveAccessToken=null,driveTokenClient=null,driveSyncTimer=null,driveAuthPending=false;
 const DRIVE_META_KEY='dynamos-hockey-drive-sync-v1';
 const DRIVE_CONNECTED_KEY='dynamos-hockey-drive-connected-v1';
-const APP_VERSION='1.9.68';
+const APP_VERSION='1.9.69';
 function getDriveMeta(){try{return JSON.parse(localStorage.getItem(DRIVE_META_KEY))||{}}catch(e){return {}}}
 function setDriveMeta(m){localStorage.setItem(DRIVE_META_KEY,JSON.stringify(m))}
 function dataHash(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
@@ -133,7 +133,7 @@ function updateDriveButtons(){let b=document.getElementById('syncDrive');if(b)b.
 function scheduleDriveSync(){if(!driveAccessToken)return;clearTimeout(driveSyncTimer);driveSyncTimer=setTimeout(()=>syncDrive(false),1800)}
 const defaultData={teams:[{id:'t1',name:'Dynamos',players:[]},{id:'t2',name:'Adversaires',players:[]}],games:[],currentGame:null};
 let db=load(),selectedPlayer=null,shotPoint=null,period=1,editingEventId=null;
-// v1.9.68: migrate legacy Hit events to Turnover in stored match history.
+// v1.9.69: migrate legacy Hit events to Turnover in stored match history.
 let quickSavePrompted=false;
 let legacyTurnoversMigrated=false; (db.games||[]).forEach(g=>(g.events||[]).forEach(e=>{if(e.type==='hit'){e.type='turnover';legacyTurnoversMigrated=true}})); if(legacyTurnoversMigrated){try{localStorage.setItem(KEY,JSON.stringify(db))}catch(e){console.warn('Migration Turnover: sauvegarde différée',e)}}
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||structuredClone(defaultData)}catch(e){return structuredClone(defaultData)}}
@@ -281,35 +281,40 @@ window.addEventListener('online',()=>{if(driveAccessToken)scheduleDriveSync();el
 window.addEventListener('load',()=>{if(localStorage.getItem(DRIVE_CONNECTED_KEY)==='1')restoreGoogleDriveConnection()},{once:true});
 function xmlCell(v){return `<Cell><Data ss:Type="String">${esc(v)}</Data></Cell>`}
 function excelExport(){
- let g=game();if(!g){toast('Aucun match.');return}
- let sheets=[];
- let eventRows=[['Date','Visiteur','Local','Période','Temps','Équipe','Événement','Numéro','Joueur','Force','xG','Gardien'],...g.events.map(e=>[g.date,team(g.away)?.name||'',team(g.home)?.name||'',e.period||'',e.time||'',team(e.team)?.name||'',label(e.type),e.number??'',e.playerName||'',e.strength||'',e.xg??'',e.goalieId?(team(e.team===g.home?g.away:g.home)?.players.find(p=>p.id===e.goalieId)?.num??''):''])];
- sheets.push(['Événements',eventRows]);
- let playerRows=[['Équipe','Joueur','B','A','PTS','+/-','Tirs cadrés','Tirs tentés','Tirs bloqués','Tirs manqués','Mises au jeu gagnées','Mises au jeu perdues','Total mises au jeu','Revirements']];
- [g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).forEach(p=>{
-  let b=g.events.filter(e=>e.type==='goal'&&e.team===tid&&e.scorer===p.id).length,
-  a=g.events.filter(e=>e.type==='goal'&&e.team===tid&&(e.assist1===p.id||e.assist2===p.id)).length,
-  plus=g.events.filter(e=>e.type==='goal'&&e.strength==='even'&&e.plus?.includes(p.id)).length,
-  minus=g.events.filter(e=>e.type==='goal'&&e.strength==='even'&&e.minus?.includes(p.id)).length,
-  shots=g.events.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal'].includes(e.type)).length,
-  attempts=g.events.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal','miss','blocked'].includes(e.type)).length,
-  blocked=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='blocked').length,
-  miss=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='miss').length,
-  fw=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoff').length,
-  fl=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoffLost').length,
-  turnovers=g.events.filter(e=>e.team===tid&&e.player===p.id&&e.type==='turnover').length;
-  playerRows.push([t.name,`#${p.num} ${p.name||''}`,b,a,b+a,plus-minus,shots,attempts,blocked,miss,fw,fl,fw+fl,turnovers]);
- })});
- sheets.push(['Joueurs',playerRows]);
- let goalieRows=[['Équipe','Gardien','Tirs contre','Arrêts','Buts alloués','SV%','xGA']];
- [g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).forEach(p=>{
-  let faced=g.events.filter(e=>e.goalieId===p.id&&['shot','goal'].includes(e.type));if(!faced.length)return;
-  let sa=faced.length,ga=faced.filter(e=>e.type==='goal').length,sv=sa-ga,xga=faced.reduce((sum,e)=>sum+(Number(e.xg)||0),0);
-  goalieRows.push([t.name,`#${p.num} ${p.name||''}`,sa,sv,ga,sa?((sv/sa)*100).toFixed(1)+'%':'',xga.toFixed(2)]);
- })});
- sheets.push(['Gardiens',goalieRows]);
- let xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+sheets.map(([name,rows])=>`<Worksheet ss:Name="${name}"><Table>${rows.map(row=>'<Row>'+row.map(xmlCell).join('')+'</Row>').join('')}</Table></Worksheet>`).join('')+'</Workbook>';
- download('dynamos-match-'+g.date+'.xls',xml,'application/vnd.ms-excel;charset=utf-8');
+ if(!db.games.length){toast('Aucun match disponible.');return;}
+ const modal=document.createElement('div');modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:14px';
+ const box=document.createElement('div');box.style.cssText='background:#182338;border:1px solid #314562;border-radius:14px;padding:16px;max-width:560px;width:100%;max-height:85vh;overflow:auto;color:#fff';
+ const games=[...db.games].sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')));
+ box.innerHTML='<h2 style="margin:0 0 8px">Export multi-matchs</h2><p style="margin:0 0 12px;color:#a9bad2">Sélectionnez les matchs à inclure dans le fichier Excel.</p><div id="exportGameList"></div><div style="display:flex;gap:8px;justify-content:center;margin:12px 0"><button type="button" id="exportSelectAll">Tout sélectionner</button><button type="button" id="exportSelectNone" class="secondary">Tout désélectionner</button></div><div style="display:flex;justify-content:center;gap:10px"><button type="button" id="exportCancel" class="secondary">Annuler</button><button type="button" id="exportGo">Exporter</button></div>';
+ modal.appendChild(box);document.body.appendChild(modal);
+ const list=box.querySelector('#exportGameList');
+ games.forEach((g,i)=>{let away=team(g.away)?.name||'Visiteur',home=team(g.home)?.name||'Local';let scoreAway=g.events.filter(e=>e.type==='goal'&&e.team===g.away).length,scoreHome=g.events.filter(e=>e.type==='goal'&&e.team===g.home).length;
+ let row=document.createElement('label');row.style.cssText='display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #2b3b54';row.innerHTML=`<input type="checkbox" data-game="${esc(g.id)}" checked><span><b>${esc(g.date||'Date inconnue')}</b> · ${esc(away)} ${scoreAway} – ${scoreHome} ${esc(home)}<small style="display:block;color:#a9bad2">${g.events.length} événements</small></span>`;list.appendChild(row);});
+ box.querySelector('#exportSelectAll').onclick=()=>list.querySelectorAll('input').forEach(x=>x.checked=true);box.querySelector('#exportSelectNone').onclick=()=>list.querySelectorAll('input').forEach(x=>x.checked=false);box.querySelector('#exportCancel').onclick=()=>modal.remove();
+ box.querySelector('#exportGo').onclick=()=>{let ids=new Set([...list.querySelectorAll('input:checked')].map(x=>x.getAttribute('data-game'))),selected=games.filter(g=>ids.has(String(g.id)));modal.remove();if(!selected.length){toast('Sélectionnez au moins un match.');return;}buildExcelExport(selected);};
+}
+function buildExcelExport(selectedGames){
+ const sheets=[],matchRows=[['ID Match','Date','Visiteur','Local','Score visiteur','Score local','Événements']];
+ const eventRows=[['ID Match','Date','Visiteur','Local','Période','Temps','Équipe','Événement','Numéro','Joueur','Force','xG','Gardien']];
+ const playerRows=[['ID Match','Date','Équipe','Joueur','B','A','PTS','+/-','Tirs cadrés','Tirs tentés','Tirs bloqués','Tirs manqués','MAJ gagnées','MAJ perdues','Total MAJ','Revirements']];
+ const goalieRows=[['ID Match','Date','Équipe','Gardien','Tirs contre','Arrêts','Buts alloués','SV%','xGA']];
+ selectedGames.forEach(g=>{
+  const away=team(g.away),home=team(g.home),awayName=away?.name||'',homeName=home?.name||'',awayScore=g.events.filter(e=>e.type==='goal'&&e.team===g.away).length,homeScore=g.events.filter(e=>e.type==='goal'&&e.team===g.home).length,mid=String(g.id??g.date??'');
+  matchRows.push([mid,g.date||'',awayName,homeName,awayScore,homeScore,g.events.length]);
+  g.events.forEach(e=>eventRows.push([mid,g.date||'',awayName,homeName,e.period||'',e.time||'',team(e.team)?.name||'',label(e.type),e.number??'',e.playerName||'',e.strength||'',e.xg??'',e.goalieId?(team(e.team===g.home?g.away:g.home)?.players.find(p=>p.id===e.goalieId)?.num??''):'']));
+  [g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).filter(p=>String(p.num)!=='999').forEach(p=>{
+   let ev=g.events, b=ev.filter(e=>e.type==='goal'&&e.team===tid&&e.scorer===p.id).length,a=ev.filter(e=>e.type==='goal'&&e.team===tid&&(e.assist1===p.id||e.assist2===p.id)).length,
+   plus=ev.filter(e=>e.type==='goal'&&e.strength==='even'&&e.plus?.includes(p.id)).length,minus=ev.filter(e=>e.type==='goal'&&e.strength==='even'&&e.minus?.includes(p.id)).length,
+   shots=ev.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal'].includes(e.type)).length,attempts=ev.filter(e=>e.team===tid&&e.player===p.id&&['shot','goal','miss','blocked'].includes(e.type)).length,
+   blocked=ev.filter(e=>e.team===tid&&e.player===p.id&&e.type==='blocked').length,miss=ev.filter(e=>e.team===tid&&e.player===p.id&&e.type==='miss').length,
+   fw=ev.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoff').length,fl=ev.filter(e=>e.team===tid&&e.player===p.id&&e.type==='faceoffLost').length,turnovers=ev.filter(e=>e.team===tid&&e.player===p.id&&e.type==='turnover').length;
+   playerRows.push([mid,g.date||'',t.name,`#${p.num} ${p.name||''}`,b,a,b+a,plus-minus,shots,attempts,blocked,miss,fw,fl,fw+fl,turnovers]);
+  });});
+  [g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).forEach(p=>{let faced=g.events.filter(e=>e.goalieId===p.id&&['shot','goal'].includes(e.type));if(!faced.length)return;let sa=faced.length,ga=faced.filter(e=>e.type==='goal').length,sv=sa-ga,xga=faced.reduce((sum,e)=>sum+(Number(e.xg)||0),0);goalieRows.push([mid,g.date||'',t.name,`#${p.num} ${p.name||''}`,sa,sv,ga,sa?((sv/sa)*100).toFixed(1)+'%':'',xga.toFixed(2)]); });});
+ });
+ sheets.push(['Matchs',matchRows],['Événements',eventRows],['Joueurs',playerRows],['Gardiens',goalieRows]);
+ const xml='<?xml version="1.0"?><Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">'+sheets.map(([name,rows])=>`<Worksheet ss:Name="${esc(name)}"><Table>${rows.map(row=>'<Row>'+row.map(xmlCell).join('')+'</Row>').join('')}</Table></Worksheet>`).join('')+'</Workbook>';
+ download('dynamos-multimatch-'+new Date().toISOString().slice(0,10)+'.xls',xml,'application/vnd.ms-excel;charset=utf-8');toast(`${selectedGames.length} match(s) exporté(s).`);
 }
  document.getElementById('exportExcel').onclick=excelExport;
 document.getElementById('exportJson').onclick=()=>download('dynamos-hockey-stats-backup.json',JSON.stringify(db,null,2),'application/json');
