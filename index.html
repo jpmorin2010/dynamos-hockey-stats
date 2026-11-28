@@ -39,7 +39,7 @@ header{padding:9px 12px}header small{display:none}.title-line h1{font-size:17px}
 </div>
 <div class="row" style="margin-top:10px">
 <div class="field"><label>Date</label><input type="date" id="gameDate"></div>
-<div class="field"><label>Adversaire / nom du match</label><input id="opponentName" placeholder="Ex. Faucons"></div>
+<div class="field"><label>Match # (Excel) <span style="color:#f87171">*</span></label><input id="opponentName" type="text" inputmode="numeric" maxlength="3" pattern="[0-9]{3}" placeholder="Ex. 231" autocomplete="off"></div>
 </div>
 <div class="row between" style="margin-top:12px">
 <div><div class="teamname" id="homeName">Dynamos</div><div class="score" id="homeScore">0</div></div>
@@ -114,7 +114,7 @@ header{padding:9px 12px}header small{display:none}.title-line h1{font-size:17px}
 <p class="small muted">Les données sont enregistrées immédiatement sur ce téléphone. La synchronisation Drive se fait lorsque l'application est ouverte et connectée à Internet. L'application tente de rétablir automatiquement l'autorisation Google à l'ouverture. Si Google exige une nouvelle autorisation, appuyez sur Connecter Google Drive.</p>
 </div>
 <div class="panel"><h2>Sauvegarde et exportation</h2><p class="muted">Les données sont conservées sur cet appareil. Exportez régulièrement une copie pour éviter toute perte.</p><div class="row"><button id="exportJson">Exporter toutes les données (JSON)</button><button id="exportCsv" class="secondary">Exporter les événements (CSV)</button><button id="exportExcel" class="secondary">Exporter le match pour Excel</button></div><div class="panel" style="margin:12px 0;background:var(--panel2)"><h3>Préférences d’export Excel</h3><p class="muted small">Choisissez un dossier d’export par défaut. Le navigateur demandera l’autorisation de l’utiliser.</p><div class="row"><button id="setExportFolder" class="secondary">Choisir le dossier par défaut</button><button id="clearExportFolder" class="secondary">Retirer le dossier par défaut</button></div><div id="exportFolderStatus" class="note small" style="margin-top:8px">Aucun dossier par défaut.</div></div><h3>Restaurer une sauvegarde</h3><input type="file" id="importFile" accept=".json,application/json"><p class="small muted">La restauration remplace les données locales actuelles.</p></div><div class="panel"><h2>À propos</h2><p class="muted small">Prototype local de Dynamos Hockey Stats. Aucune donnée n'est envoyée à un serveur. Pour une utilisation durable, faites des exports JSON réguliers.</p></div></section>
-<div class="footer">Dynamos Hockey Stats · Version 1.9.70 · Données locales + Google Drive</div>
+<div class="footer">Dynamos Hockey Stats · Version 1.9.71 · Données locales + Google Drive</div>
 </main><div class="toast" id="toast"></div>
 <script>
 const KEY='dynamos-hockey-stats-v1';
@@ -124,7 +124,7 @@ const DRIVE_FILE_NAME='Dynamos Hockey Stats - backup.json';
 let driveAccessToken=null,driveTokenClient=null,driveSyncTimer=null,driveAuthPending=false;
 const DRIVE_META_KEY='dynamos-hockey-drive-sync-v1';
 const DRIVE_CONNECTED_KEY='dynamos-hockey-drive-connected-v1';
-const APP_VERSION='1.9.70';
+const APP_VERSION='1.9.71';
 function getDriveMeta(){try{return JSON.parse(localStorage.getItem(DRIVE_META_KEY))||{}}catch(e){return {}}}
 function setDriveMeta(m){localStorage.setItem(DRIVE_META_KEY,JSON.stringify(m))}
 function dataHash(value){let h=2166136261;for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
@@ -145,6 +145,7 @@ function dynamosTeamId(g=game()){return db.teams.find(t=>/dynamo/i.test(t.name))
 function isDynamosTeam(tid){return /dynamo/i.test(team(tid)?.name||'')}
 function game(){return db.games.find(g=>g.id===db.currentGame)}
 function currentTeams(){return [document.getElementById('homeTeam').value,document.getElementById('awayTeam').value]}
+function validateExcelMatchNumber(value,gameId){const n=String(value??'').trim();if(!/^\d{3}$/.test(n)||n==='000')return {ok:false,message:'Excel Match # is required. Enter a number from 001 to 999.'};const duplicate=db.games.find(g=>g.id!==gameId&&String(g.opponent??'').trim()===n);if(duplicate)return {ok:false,message:'This Excel Match # is already assigned to another game.'};return {ok:true,value:n};}
 function initGame(){if(!game()){let ids=currentTeams();db.games.push({id:id(),date:new Date().toISOString().slice(0,10),home:ids[0],away:ids[1],opponent:'',events:[],finished:false});db.currentGame=db.games.at(-1).id;save()}render()}
 function renderSelect(el,items,selected){el.innerHTML=items.map(x=>`<option value="${x.id}" ${x.id===selected?'selected':''}>${esc(x.name)}</option>`).join('')}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -182,9 +183,9 @@ document.getElementById('rink').addEventListener('click',()=>checkQuickSaveReady
 document.getElementById('addTeam').onclick=()=>{let n=document.getElementById('teamNameInput').value.trim();if(!n)return;let t={id:id(),name:n,players:[]};if(confirm('Créer aussi des profils génériques pour simplifier la saisie des événements?')){t.players.push({id:id(),num:999,name:'Joueur générique',position:'A',generic:true},{id:id(),num:998,name:'Gardien générique',position:'G',generic:true});}db.teams.push(t);document.getElementById('teamNameInput').value='';save();render();toast('Équipe ajoutée.')};
 document.getElementById('addPlayer').onclick=()=>{let t=team(document.getElementById('rosterTeam').value),num=document.getElementById('playerNumber').value,name=document.getElementById('playerName').value.trim();if(!t||num===''){toast('Choisissez une équipe et un numéro.');return}if(t.players.some(p=>String(p.num)===String(num))){toast('Ce numéro existe déjà dans cette équipe.');return}t.players.push({id:id(),num:Number(num),name,position:document.getElementById('playerPosition').value});document.getElementById('playerNumber').value='';document.getElementById('playerName').value='';save();render();toast('Joueur ajouté.')};
 ['homeTeam','awayTeam'].forEach(idn=>document.getElementById(idn).onchange=()=>{let g=game();if(idn==='homeTeam')g.home=document.getElementById(idn).value;else g.away=document.getElementById(idn).value;save();render()});
-document.getElementById('gameDate').onchange=e=>{game().date=e.target.value;save()};document.getElementById('opponentName').onchange=e=>{game().opponent=e.target.value;save()};
+document.getElementById('gameDate').onchange=e=>{game().date=e.target.value;save()};document.getElementById('opponentName').onchange=e=>{let g=game(),raw=String(e.target.value??'').trim();if(raw&&(!/^\d{3}$/.test(raw)||raw==='000')){toast('Excel Match # must be between 001 and 999.');e.target.value=g.opponent||'';return;}g.opponent=raw;save();};document.getElementById('opponentName').oninput=e=>{e.target.value=e.target.value.replace(/\D/g,'').slice(0,3)};
 document.getElementById('newGame').onclick=()=>{if(!confirm('Créer un nouveau match? Le match actuel sera conservé.'))return;let ids=currentTeams();db.games.push({id:id(),date:new Date().toISOString().slice(0,10),home:ids[0],away:ids[1],opponent:'',events:[],finished:false,onIce:{}});db.currentGame=db.games.at(-1).id;period=1;save();render()};
-document.getElementById('finishGame').onclick=()=>{game().finished=true;save();toast('Match terminé et sauvegardé.')};
+document.getElementById('finishGame').onclick=()=>{let g=game(),check=validateExcelMatchNumber(g.opponent,g.id);if(!check.ok){toast(check.message);document.getElementById('opponentName').focus();return;}g.opponent=check.value;g.finished=true;save();toast('Match terminé et sauvegardé.')};
 [['p1',1],['p2',2],['p3',3],['ot','Prolongation']].forEach(([idn,p])=>document.getElementById(idn).onclick=()=>{period=p;document.getElementById('periodLabel').textContent=typeof p==='number'?'Période '+p:p;[['p1',1],['p2',2],['p3',3],['ot','Prolongation']].forEach(([bid,bv])=>document.getElementById(bid).classList.toggle('active',bv===p))});
 document.getElementById('statsTeam').onchange=renderStats;document.getElementById('rosterTeam').onchange=()=>{renderRoster();renderFormations()};
 document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));['live','teams','stats','backup'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==b.dataset.tab));render()});
@@ -289,9 +290,9 @@ function excelExport(){
  modal.appendChild(box);document.body.appendChild(modal);
  const list=box.querySelector('#exportGameList');
  games.forEach((g,i)=>{let away=team(g.away)?.name||'Visiteur',home=team(g.home)?.name||'Local';let scoreAway=g.events.filter(e=>e.type==='goal'&&e.team===g.away).length,scoreHome=g.events.filter(e=>e.type==='goal'&&e.team===g.home).length;
- let row=document.createElement('label');row.style.cssText='display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #2b3b54';row.innerHTML=`<input type="checkbox" data-game="${esc(g.id)}" checked><span><b>${esc(g.date||'Date inconnue')}</b> · ${esc(away)} ${scoreAway} – ${scoreHome} ${esc(home)}<small style="display:block;color:#a9bad2">${g.events.length} événements</small></span>`;list.appendChild(row);});
+ let row=document.createElement('label');row.style.cssText='display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #2b3b54';row.innerHTML=`<input type="checkbox" data-game="${esc(g.id)}" checked><span><b>Excel #${esc(g.opponent||'MISSING')}</b> · ${esc(g.date||'Date inconnue')} · ${esc(away)} ${scoreAway} – ${scoreHome} ${esc(home)}<small style="display:block;color:#a9bad2">${g.events.length} événements</small></span>`;list.appendChild(row);});
  box.querySelector('#exportSelectAll').onclick=()=>list.querySelectorAll('input').forEach(x=>x.checked=true);box.querySelector('#exportSelectNone').onclick=()=>list.querySelectorAll('input').forEach(x=>x.checked=false);box.querySelector('#exportCancel').onclick=()=>modal.remove();
- box.querySelector('#exportGo').onclick=()=>{let ids=new Set([...list.querySelectorAll('input:checked')].map(x=>x.getAttribute('data-game'))),selected=games.filter(g=>ids.has(String(g.id)));modal.remove();if(!selected.length){toast('Sélectionnez au moins un match.');return;}buildExcelExport(selected);};
+ box.querySelector('#exportGo').onclick=()=>{let ids=new Set([...list.querySelectorAll('input:checked')].map(x=>x.getAttribute('data-game'))),selected=games.filter(g=>ids.has(String(g.id)));if(!selected.length){toast('Sélectionnez au moins un match.');return;}let invalid=selected.find(g=>!validateExcelMatchNumber(g.opponent,g.id).ok);if(invalid){toast('Chaque match sélectionné doit avoir un numéro Excel unique à 3 chiffres.');return;}modal.remove();buildExcelExport(selected);};
 }
 const EXPORT_DIR_DB='dynamos-export-directory-v1';
 function openExportHandleDB(){return new Promise((resolve,reject)=>{const req=indexedDB.open(EXPORT_DIR_DB,1);req.onupgradeneeded=()=>req.result.createObjectStore('handles');req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});}
@@ -317,13 +318,13 @@ files.push(['xl/_rels/workbook.xml.rels','<?xml version="1.0" encoding="UTF-8"?>
 files.push(['xl/styles.xml','<?xml version="1.0" encoding="UTF-8"?><styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts><fills count="1"><fill><patternFill patternType="none"/></fill></fills><borders count="1"><border/></borders><cellStyleXfs count="1"><xf/></cellStyleXfs><cellXfs count="1"><xf fontId="0" fillId="0" borderId="0" xfId="0"/></cellXfs></styleSheet>']);sheets.forEach((s,i)=>files.push([`xl/worksheets/sheet${i+1}.xml`,sheetXml(s[1])]));return zipStore(files)}
 async function saveXlsx(bytes,filename){const blob=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});let dir=null;try{dir=await getExportDirectory()}catch(e){}if(dir){try{let permission=await dir.queryPermission({mode:'readwrite'});if(permission!=='granted')permission=await dir.requestPermission({mode:'readwrite'});if(permission==='granted'){const f=await dir.getFileHandle(filename,{create:true}),w=await f.createWritable();await w.write(blob);await w.close();toast('Export enregistré dans '+dir.name);return}}catch(e){console.warn('Export folder permission unavailable; fallback to save dialog',e)}}if(window.showSaveFilePicker){try{const fh=await showSaveFilePicker({suggestedName:filename,types:[{description:'Fichier Excel (.xlsx)',accept:{'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':['.xlsx']}}]});const w=await fh.createWritable();await w.write(blob);await w.close();toast('Export Excel enregistré.');return}catch(e){if(e.name==='AbortError')return;console.warn(e)}}download(filename,blob,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');toast('Export Excel téléchargé.');}
 function buildExcelExport(selectedGames){
- const sheets=[],matchRows=[['ID Match','Date','Visiteur','Local','Score visiteur','Score local','Événements']];
+ const sheets=[],matchRows=[['ID Match','Match Excel #','Date','Visiteur','Local','Score visiteur','Score local','Événements']];
  const eventRows=[['ID Match','Date','Visiteur','Local','Période','Temps','Équipe','Événement','Numéro','Joueur','Force','xG','Gardien']];
  const playerRows=[['ID Match','Date','Équipe','Joueur','B','A','PTS','+/-','Tirs cadrés','Tirs tentés','Tirs bloqués','Tirs manqués','MAJ gagnées','MAJ perdues','Total MAJ','Revirements']];
  const goalieRows=[['ID Match','Date','Équipe','Gardien','Tirs contre','Arrêts','Buts alloués','SV%','xGA']];
  selectedGames.forEach(g=>{
   const away=team(g.away),home=team(g.home),awayName=away?.name||'',homeName=home?.name||'',awayScore=g.events.filter(e=>e.type==='goal'&&e.team===g.away).length,homeScore=g.events.filter(e=>e.type==='goal'&&e.team===g.home).length,mid=String(g.id??g.date??'');
-  matchRows.push([mid,g.date||'',awayName,homeName,awayScore,homeScore,g.events.length]);
+  matchRows.push([mid,String(g.opponent??''),g.date||'',awayName,homeName,awayScore,homeScore,g.events.length]);
   g.events.forEach(e=>eventRows.push([mid,g.date||'',awayName,homeName,e.period||'',e.time||'',team(e.team)?.name||'',label(e.type),e.number??'',e.playerName||'',e.strength||'',e.xg??'',e.goalieId?(team(e.team===g.home?g.away:g.home)?.players.find(p=>p.id===e.goalieId)?.num??''):'']));
   [g.away,g.home].forEach(tid=>{let t=team(tid);(t?.players||[]).filter(p=>String(p.num)!=='999').forEach(p=>{
    let ev=g.events, b=ev.filter(e=>e.type==='goal'&&e.team===tid&&e.scorer===p.id).length,a=ev.filter(e=>e.type==='goal'&&e.team===tid&&(e.assist1===p.id||e.assist2===p.id)).length,
